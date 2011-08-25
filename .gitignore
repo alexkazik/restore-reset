@@ -1,0 +1,4 @@
+.dep
+reset-restore.*
+*.o
+*.lst
