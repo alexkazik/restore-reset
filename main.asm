@@ -6,13 +6,13 @@
 */
 
 // Registers 0..15 are not used, because some AVRs don't have such
-#define REG_SREG 16 // to store the SREG in an interrupt
-#define REG_KEY_VALID 17 // is the REG_KEY_STATE valid (0) or invalid (!=0)
-#define REG_KEY_STATE 18 // the state of the key (on valid if REG_KEY_VALID is 0)
-#define REG_TIMER 19 // the timer
-// Registers X..29 are just not used
-// Registers 30,31 are not used, so they can be used a a stack for those AVR's
-//      which don't have SRAM (two bytes are enough)
+#define REG_TIMER 16 // the timer
+#define REG_SREG 17 // to store the SREG in the interrupt
+#define REG_KEY_VALID 18 // is the REG_KEY_STATE valid (0) or invalid (!=0)
+#define REG_KEY_STATE 19 // the state of the key (only valid if REG_KEY_VALID is 0)
+// Registers 20..29 are just not used
+// Registers 30,31 are not used, so they can be used as a stack for those AVR's
+//      which don't have SRAM (two bytes are enough, just interrpt and return, no rcall)
 
 /*
 ** I/O DEFINITION - ALL MUST BE ON ONE PORT
@@ -25,21 +25,9 @@
 #define RESTORE_IN_BIT 0
 #define RESTORE_OUT_BIT 1
 #define RESET_BIT 2
-// you can comment the LEDs OUT (one or both) and the code will follow
+// you can comment the LEDs out (one or both) and the code will follow
 #define LED1_BIT 3
 #define LED2_BIT 4
-
-// do not change this
-#ifdef LED1_BIT
-	#define LED1_MASK (1<<LED1_BIT)
-#else
-	#define LED1_MASK 0
-#endif
-#ifdef LED2_BIT
-	#define LED2_MASK (1<<LED2_BIT)
-#else
-	#define LED2_MASK 0
-#endif
 
 /*
 ** TIMING DEFINITION
@@ -98,6 +86,7 @@ __vectors:
 /*
 ** POWER UP ROUTINE
 */
+
 .global main
 .func main
 main:
@@ -112,19 +101,30 @@ main:
 		ldi REG_TIMER, RAMEND >> 8
 		out _SFR_IO_ADDR(SPH), REG_TIMER
 	#endif
+
+	// only for initial LED states	
+	#ifdef LED1_BIT
+		#define LED1_MASK (1<<LED1_BIT)
+	#else
+		#define LED1_MASK 0
+	#endif
+	#ifdef LED2_BIT
+		#define LED2_MASK (1<<LED2_BIT)
+	#else
+		#define LED2_MASK 0
+	#endif
 	
 	// init I/O
-	// all switched off lines (REST_OUT/RES/LED*) are input, no pullup -> not connected
 	
-	ldi REG_TIMER, LED1_MASK | LED2_MASK // the mast is 0 the the LED is not known
+	ldi REG_TIMER, LED1_MASK | LED2_MASK // the mask is 0 if the the LED is not known
 	out _SFR_IO_ADDR(DDR), REG_TIMER // LEDs output, others input
 	ldi REG_TIMER, (1<<RESTORE_IN_BIT)
 	out _SFR_IO_ADDR(PORT), REG_TIMER // pulllup for REST_IN, others without pullup / output low
 
 	// init timer! to the correct TIME_BASE
 #if defined(__AVR_ATtiny13__) || defined(__AVR_ATtiny13A__)
-	#if TIME_BASE != 20000
-		#error "currently only 20ms as base are supported"
+	#if TIME_BASE != 20000 || F_CPU != 1000000
+		#error "currently only 20ms@1Mhz as base are supported"
 	#endif
 	// time to overflow 78(.125) * (clock/256) ~= 20ms
 	ldi REG_TIMER, 78
@@ -140,8 +140,8 @@ main:
 	ldi REG_TIMER, (1<<TOIE0)
 	out _SFR_IO_ADDR(TIMSK0), REG_TIMER
 #elif defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny24A__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny44A__) || defined(__AVR_ATtiny84__)
-	#if TIME_BASE != 20000
-		#error "currently only 20ms as base are supported"
+	#if TIME_BASE != 20000 || F_CPU != 1000000
+		#error "currently only 20ms@1Mhz as base are supported"
 	#endif
 	// time to overflow 78(.125) * (clock/256) ~= 20ms
 	ldi REG_TIMER, 78
@@ -167,10 +167,12 @@ main:
 	#ifdef LED2_BIT
 		cbi _SFR_IO_ADDR(DDR), LED2_BIT // set to input, port=0 -> n/c
 	#endif
-	// enable interrup
+	// enable interrupt
 	sei
 	
-	// the real program
+	/*
+	** the real program
+	*/
  
 state0: // wait for releasing the restore key
 	tst REG_KEY_VALID

@@ -38,9 +38,8 @@
 
 
 # MCU name
-#MCU = avr2 -D__AVR_ATtiny24A__
+#MCU = avr2 -D__AVR_ATtiny24A__ # attiny24/avr2.5 would be correct, but not known by this avr-gcc (knows additionaly the movw command)
 #AVRDUDE_MCU = attiny24
-# attiny24/avr2.5 would be correct, but not known by this avr-gcc (knows additionaly the movw command)
 MCU = attiny13
 AVRDUDE_MCU = attiny13
 
@@ -319,7 +318,6 @@ gccversion :
 
 # Program the device.  
 program: $(TARGET).hex $(TARGET).eep
-	../progswitch/progswitch -p -i /dev/tty.SLAB_USBtoUART
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
 
 
