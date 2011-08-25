@@ -84,7 +84,10 @@ __vectors:
 	nop // vector 5, unused
 	nop // vector 6, unused
 	nop // vector 7, unused
-	rjmp sig_overflow0 // vector 8
+	nop // vector 8, unused
+	nop // vector 9, unused
+	nop // vector 10, unused
+	rjmp sig_overflow0 // vector 11
 #else
 	#error "unknown AVR"
 #endif
@@ -257,8 +260,8 @@ sig_overflow0:
 	in REG_SREG, _SFR_IO_ADDR(SREG)
 	// "entprellung" of the RESTORE KEY
 	mov REG_KEY_VALID, REG_KEY_STATE
-	in REG_KEY_STATE, PIN
-	and REG_KEY_STATE, (1<<RESTORE_IN_BIT)
+	in REG_KEY_STATE, _SFR_IO_ADDR(PIN)
+	andi REG_KEY_STATE, (1<<RESTORE_IN_BIT)
 	eor REG_KEY_VALID, REG_KEY_STATE
 	// decrement timer
 	dec REG_TIMER

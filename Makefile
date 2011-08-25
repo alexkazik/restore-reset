@@ -39,8 +39,10 @@
 
 # MCU name
 #MCU = avr2 -D__AVR_ATtiny24A__
-# avr2.5 would be correct, but not known by this avr-gcc (knows additionaly the movw command)
+#AVRDUDE_MCU = attiny24
+# attiny24/avr2.5 would be correct, but not known by this avr-gcc (knows additionaly the movw command)
 MCU = attiny13
+AVRDUDE_MCU = attiny13
 
 # Main Oscillator Frequency
 # This is only used to define F_CPU in all assembler and c-sources.
@@ -181,7 +183,7 @@ AVRDUDE_PROGRAMMER = avr910
 
 # com1 = serial port. Use lpt1 to connect to parallel port.
 AVRDUDE_PORT = /dev/cu.SLAB_USBtoUART    # programmer connected to serial device
-AVRDUDE_PORT = /dev/cu.serial-0001    # programmer connected to serial device
+#AVRDUDE_PORT = /dev/cu.serial-0001    # programmer connected to serial device
 
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 #AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
@@ -201,7 +203,7 @@ AVRDUDE_ERASE_COUNTER = -y
 # to submit bug reports.
 #AVRDUDE_VERBOSE = -v -v
 
-AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
+AVRDUDE_FLAGS = -p $(AVRDUDE_MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
 AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
 AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
 AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
