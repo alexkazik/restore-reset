@@ -51,7 +51,7 @@ F_CPU = 1000000
 FORMAT = ihex
 
 # Target file name (without extension).
-TARGET = reset-restore
+TARGET = restore-reset
 
 
 # List C source files here. (C dependencies are automatically generated.)
@@ -65,7 +65,7 @@ SRC =
 # Even though the DOS/Win* filesystem matches both .s and .asm the same,
 # it will preserve the spelling of the filenames, and gcc itself does
 # care about how the name is spelled on its command-line.
-ASRC = main.asm
+ASRC = restore-reset.asm
 
 # Optimization level, can be [0, 1, 2, 3, s]. 
 # 0 = turn off optimization. s = optimize for size.
