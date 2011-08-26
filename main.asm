@@ -62,34 +62,34 @@
 __vectors:
 #if defined(__AVR_ATtiny13__) || defined(__AVR_ATtiny13A__)
 	rjmp main // vector 0
-	nop // vector 1, unused
-	nop // vector 2, unused
+	.word 0xffff // vector 1, unused
+	.word 0xffff // vector 2, unused
 	rjmp sig_overflow0 // vector 3
 #elif defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
 	rjmp main // vector 0
-	nop // vector 1, unused
-	nop // vector 2, unused
-	nop // vector 3, unused
-	nop // vector 4, unused
+	.word 0xffff // vector 1, unused
+	.word 0xffff // vector 2, unused
+	.word 0xffff // vector 3, unused
+	.word 0xffff // vector 4, unused
 	rjmp sig_overflow0 // vector 5
 #elif defined(__AVR_ATtiny4__) || defined(__AVR_ATtiny5__) || defined(__AVR_ATtiny9__) || defined(__AVR_ATtiny10__)
 	rjmp main // vector 0
-	nop // vector 1, unused
-	nop // vector 2, unused
-	nop // vector 3, unused
+	.word 0xffff // vector 1, unused
+	.word 0xffff // vector 2, unused
+	.word 0xffff // vector 3, unused
 	rjmp sig_overflow0 // vector 4
 #elif defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny24A__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny44A__) || defined(__AVR_ATtiny84__)
 	rjmp main // vector 0
-	nop // vector 1, unused
-	nop // vector 2, unused
-	nop // vector 3, unused
-	nop // vector 4, unused
-	nop // vector 5, unused
-	nop // vector 6, unused
-	nop // vector 7, unused
-	nop // vector 8, unused
-	nop // vector 9, unused
-	nop // vector 10, unused
+	.word 0xffff // vector 1, unused
+	.word 0xffff // vector 2, unused
+	.word 0xffff // vector 3, unused
+	.word 0xffff // vector 4, unused
+	.word 0xffff // vector 5, unused
+	.word 0xffff // vector 6, unused
+	.word 0xffff // vector 7, unused
+	.word 0xffff // vector 8, unused
+	.word 0xffff // vector 9, unused
+	.word 0xffff // vector 10, unused
 	rjmp sig_overflow0 // vector 11
 #else
 	#error "unknown AVR"
@@ -106,7 +106,7 @@ __vectors:
 .func main
 main:
 
-	// REG_SREG is used as a temporary register; it's only ised in the interrupt, which is at this point disabled
+	// REG_SREG is used as a temporary register; it's only ised in the interrupt, which is disabled at this point
 
 	// setup stack
 	// hi byte of the stack, only used for systems with >128 bytes of sram
@@ -181,10 +181,10 @@ main:
 	out _SFR_IO_ADDR(OCR0AH), REG_SREG
 	ldi REG_SREG, 78 & 0xff
 	out _SFR_IO_ADDR(OCR0AL), REG_SREG
-	// ctc mode (two of the three WGM bits)
+	// ctc mode (two of the four WGM bits)
 	ldi	REG_SREG, (1<<WGM01) | (1<<WGM00)
 	out _SFR_IO_ADDR(TCCR0A), REG_SREG
-	// ctc mode (the last of the three WGM bits)
+	// ctc mode (the last two of the four WGM bits)
 	// AND scaler: clock/256
 	ldi REG_SREG, (1<<WGM02) | (1<<WGM03) | (1<<CS02)
 	out _SFR_IO_ADDR(TCCR0B), REG_SREG
@@ -197,7 +197,7 @@ main:
 
 	// prepare launch
 	ldi REG_KEY_VALID, (1<<RESTORE_IN_BIT) // key not valid
-	ldi REG_KEY_STATE, 0 // key pressed
+	ldi REG_KEY_STATE, (0<<RESTORE_IN_BIT) // key pressed
 	// set LEDs (1 is already on, 2 will be switched off)
 	#ifdef LED2_BIT
 		cbi _SFR_IO_ADDR(DDR), LED2_BIT // set to input, port=0 -> n/c
