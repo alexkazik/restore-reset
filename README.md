@@ -16,7 +16,7 @@ All you need
 ------------
 
 * [Code+Docs](https://github.com/alexkazik/restore-reset)
-* [Homepage](http://alex.kazik.de/195/getopts/)
+* [Homepage](http://alex.kazik.de/232/restore-reset)
 
 How it works
 ------------
@@ -33,6 +33,10 @@ Scematics
 ---------
 
 The scematics are from [Novlammoth](http://www.forum64.de/wbb3/user/4215-novlammoth/).
+
+You have to cut one line of the keyboard cable, the restore line, and connect both lines
+to the attiny: restore in - the line to the key, restore out - the line to the c64.
+One line is, of course, the reset line. And last but not least power and ground.
 
 Instead of the ATtiny13/A you can also use almost any ATtiny/mega. The code is prepared
 for ATtiny 13,13A,25,45,85,4,5,9,10,24,24A,44,44A,48 - just pick the one which is available.
