@@ -6,26 +6,28 @@
 */
 
 // Registers 0..15 are not used, because some AVRs don't have such
-#define REG_TIMER 16 // the timer
-#define REG_SREG 17 // to store the SREG in the interrupt
-#define REG_KEY_VALID 18 // is the REG_KEY_STATE valid (0) or invalid (!=0)
-#define REG_KEY_STATE 19 // the state of the key (only valid if REG_KEY_VALID is 0)
+#define REG_SREG 16 // to store the SREG in the interrupt
+#define REG_KEY_VALID 17 // is the REG_KEY_STATE valid (0) or invalid (!=0)
+#define REG_KEY_STATE 18 // the state of the key (only valid if REG_KEY_VALID is 0)
+#define REG_TIMER 19 // the timer
 // Registers 20..29 are just not used
 // Registers 30,31 are not used, so they can be used as a stack for those AVR's
 //      which don't have SRAM (two bytes are enough, just interrpt and return, no rcall)
 
 /*
-** I/O DEFINITION - ALL MUST BE ON ONE PORT
+** I/O DEFINITION
 */
 
+// ALL PINS MUST BE ON ONE PORT
 #define PORT PORTB
 #define PIN PINB
 #define DDR DDRB
 
+// THE PINS
 #define RESTORE_IN_BIT 0
 #define RESTORE_OUT_BIT 1
 #define RESET_BIT 2
-// you can comment the LEDs out (one or both) and the code will follow
+// you can comment the LEDs out (one, another or both) if you don't have/want LEDs
 #define LED1_BIT 3
 #define LED2_BIT 4
 
@@ -40,13 +42,13 @@
 #define TIME_RESET (2000000/TIME_BASE) // how long you should press the restore key to trigger a reset
 #define TIME_BLINK_LED (500000/TIME_BASE) // how long should the LED blink
 
-#if TIME_LINE_LOW <= 1 || TIME_LINE_PAUSE <= 1 || TIME_RESET <= 1 || TIME_BLINK_LED <= 1
-	#error "times must be >= 2 BASES"
-#elif TIME_RESET - (TIME_LINE_LOW + TIME_LINE_PAUSE) <= 1
+#if TIME_LINE_LOW < 1 || TIME_LINE_PAUSE < 1 || TIME_RESET < 1 || TIME_BLINK_LED < 1
+	#error "times must be > BASE"
+#elif TIME_RESET - (TIME_LINE_LOW + TIME_LINE_PAUSE) < 1
 	#error "time for reset is too low"
 #elif TIME_RESET - (TIME_LINE_LOW + TIME_LINE_PAUSE) > 255
 	#error "time for reset is too high"
-#elif TIME_BLINK_LED - TIME_LINE_LOW <= 1
+#elif (defined(LED1_BIT) || defined(LED2_BIT)) && (TIME_BLINK_LED - TIME_LINE_LOW < 1)
 	#error "time for blink must be larger than for holding the line low"
 #endif
 
@@ -63,6 +65,19 @@ __vectors:
 	nop // vector 1, unused
 	nop // vector 2, unused
 	rjmp sig_overflow0 // vector 3
+#elif defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
+	rjmp main // vector 0
+	nop // vector 1, unused
+	nop // vector 2, unused
+	nop // vector 3, unused
+	nop // vector 4, unused
+	rjmp sig_overflow0 // vector 5
+#elif defined(__AVR_ATtiny4__) || defined(__AVR_ATtiny5__) || defined(__AVR_ATtiny9__) || defined(__AVR_ATtiny10__)
+	rjmp main // vector 0
+	nop // vector 1, unused
+	nop // vector 2, unused
+	nop // vector 3, unused
+	rjmp sig_overflow0 // vector 4
 #elif defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny24A__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny44A__) || defined(__AVR_ATtiny84__)
 	rjmp main // vector 0
 	nop // vector 1, unused
@@ -91,16 +106,17 @@ __vectors:
 .func main
 main:
 
-	// REG_TIMER is used as a temp, only in use after releasing the interrupt
+	// REG_SREG is used as a temporary register; it's only ised in the interrupt, which is at this point disabled
 
 	// setup stack
-	ldi REG_TIMER, RAMEND & 0xff
-	out _SFR_IO_ADDR(SPL), REG_TIMER
-	// hi end of the stack, only used for systems with >128 bytes of ram
+	// hi byte of the stack, only used for systems with >128 bytes of sram
 	#ifdef SPH
-		ldi REG_TIMER, RAMEND >> 8
-		out _SFR_IO_ADDR(SPH), REG_TIMER
+		ldi REG_SREG, RAMEND >> 8
+		out _SFR_IO_ADDR(SPH), REG_SREG
 	#endif
+	// low byte of the stack
+	ldi REG_SREG, RAMEND & 0xff
+	out _SFR_IO_ADDR(SPL), REG_SREG
 
 	// only for initial LED states	
 	#ifdef LED1_BIT
@@ -116,53 +132,72 @@ main:
 	
 	// init I/O
 	
-	ldi REG_TIMER, LED1_MASK | LED2_MASK // the mask is 0 if the the LED is not known
-	out _SFR_IO_ADDR(DDR), REG_TIMER // LEDs output, others input
-	ldi REG_TIMER, (1<<RESTORE_IN_BIT)
-	out _SFR_IO_ADDR(PORT), REG_TIMER // pulllup for REST_IN, others without pullup / output low
+	ldi REG_SREG, LED1_MASK | LED2_MASK // the mask is 0 if the the LED is not known
+	out _SFR_IO_ADDR(DDR), REG_SREG // LEDs output, others input
+	ldi REG_SREG, (1<<RESTORE_IN_BIT)
+	out _SFR_IO_ADDR(PORT), REG_SREG // pulllup for REST_IN, others without pullup / output low
 
 	// init timer! to the correct TIME_BASE
-#if defined(__AVR_ATtiny13__) || defined(__AVR_ATtiny13A__)
+#if defined(__AVR_ATtiny13__) || defined(__AVR_ATtiny13A__) || defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny24A__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny44A__) || defined(__AVR_ATtiny84__)
 	#if TIME_BASE != 20000 || F_CPU != 1000000
 		#error "currently only 20ms@1Mhz as base are supported"
 	#endif
 	// time to overflow 78(.125) * (clock/256) ~= 20ms
-	ldi REG_TIMER, 78
-	out _SFR_IO_ADDR(OCR0A), REG_TIMER
+	ldi REG_SREG, 78
+	out _SFR_IO_ADDR(OCR0A), REG_SREG
 	// ctc mode (two of the three WGM bits)
-	ldi	REG_TIMER, (1<<WGM01) | (1<<WGM00)
-	out _SFR_IO_ADDR(TCCR0A), REG_TIMER
+	ldi	REG_SREG, (1<<WGM01) | (1<<WGM00)
+	out _SFR_IO_ADDR(TCCR0A), REG_SREG
 	// ctc mode (the last of the three WGM bits)
 	// AND scaler: clock/256
-	ldi REG_TIMER, (1<<WGM02) | (1<<CS02)
-	out _SFR_IO_ADDR(TCCR0B), REG_TIMER
+	ldi REG_SREG, (1<<WGM02) | (1<<CS02)
+	out _SFR_IO_ADDR(TCCR0B), REG_SREG
 	// enable interrupt
-	ldi REG_TIMER, (1<<TOIE0)
-	out _SFR_IO_ADDR(TIMSK0), REG_TIMER
-#elif defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny24A__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny44A__) || defined(__AVR_ATtiny84__)
+	ldi REG_SREG, (1<<TOIE0)
+	out _SFR_IO_ADDR(TIMSK0), REG_SREG
+#elif defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
 	#if TIME_BASE != 20000 || F_CPU != 1000000
 		#error "currently only 20ms@1Mhz as base are supported"
 	#endif
 	// time to overflow 78(.125) * (clock/256) ~= 20ms
-	ldi REG_TIMER, 78
-	out _SFR_IO_ADDR(OCR0A), REG_TIMER
+	ldi REG_SREG, 78
+	out _SFR_IO_ADDR(OCR0A), REG_SREG
 	// ctc mode (two of the three WGM bits)
-	ldi	REG_TIMER, (1<<WGM01) | (1<<WGM00)
-	out _SFR_IO_ADDR(TCCR0A), REG_TIMER
+	ldi	REG_SREG, (1<<WGM01) | (1<<WGM00)
+	out _SFR_IO_ADDR(TCCR0A), REG_SREG
 	// ctc mode (the last of the three WGM bits)
 	// AND scaler: clock/256
-	ldi REG_TIMER, (1<<WGM02) | (1<<CS02)
-	out _SFR_IO_ADDR(TCCR0B), REG_TIMER
+	ldi REG_SREG, (1<<WGM02) | (1<<CS02)
+	out _SFR_IO_ADDR(TCCR0B), REG_SREG
 	// enable interrupt
-	ldi REG_TIMER, (1<<TOIE0)
-	out _SFR_IO_ADDR(TIMSK0), REG_TIMER
+	ldi REG_SREG, (1<<TOIE0)
+	out _SFR_IO_ADDR(TIMSK), REG_SREG // <-- the only differenct to attiny13/attinyX4
+#elif defined(__AVR_ATtiny4__) || defined(__AVR_ATtiny5__) || defined(__AVR_ATtiny9__) || defined(__AVR_ATtiny10__)
+	#if TIME_BASE != 20000 || F_CPU != 1000000
+		#error "currently only 20ms@1Mhz as base are supported"
+	#endif
+	// time to overflow 78(.125) * (clock/256) ~= 20ms
+	ldi REG_SREG, 78 >> 8
+	out _SFR_IO_ADDR(OCR0AH), REG_SREG
+	ldi REG_SREG, 78 & 0xff
+	out _SFR_IO_ADDR(OCR0AL), REG_SREG
+	// ctc mode (two of the three WGM bits)
+	ldi	REG_SREG, (1<<WGM01) | (1<<WGM00)
+	out _SFR_IO_ADDR(TCCR0A), REG_SREG
+	// ctc mode (the last of the three WGM bits)
+	// AND scaler: clock/256
+	ldi REG_SREG, (1<<WGM02) | (1<<WGM03) | (1<<CS02)
+	out _SFR_IO_ADDR(TCCR0B), REG_SREG
+	// enable interrupt
+	ldi REG_SREG, (1<<TOIE0)
+	out _SFR_IO_ADDR(TIMSK0), REG_SREG
 #else
 	#error "unknown AVR"
 #endif
 
 	// prepare launch
-	ser REG_KEY_VALID // not valid
-	clr REG_KEY_STATE // key pressed
+	ldi REG_KEY_VALID, (1<<RESTORE_IN_BIT) // key not valid
+	ldi REG_KEY_STATE, 0 // key pressed
 	// set LEDs (1 is already on, 2 will be switched off)
 	#ifdef LED2_BIT
 		cbi _SFR_IO_ADDR(DDR), LED2_BIT // set to input, port=0 -> n/c
@@ -187,16 +222,16 @@ state1: // wait for pressing the restore key
 	brne state1 // key not pressed, loop
 
 	// pull RESTORE_OUT low for TIME_LINE_LOW
-	ldi REG_TIMER, TIME_LINE_LOW // init timer
 	sbi _SFR_IO_ADDR(DDR), RESTORE_OUT_BIT // set to output, port=0 -> low
+	ldi REG_TIMER, TIME_LINE_LOW // init timer
 
 state2: // wait for TIME_LINE_LOW
 	tst REG_TIMER
 	brne state2 // not yet done -> loop
 
 	// restore RESTORE_OUT for (at least) TIME_LINE_PAUSE
-	ldi REG_TIMER, TIME_LINE_PAUSE // init timer
 	cbi _SFR_IO_ADDR(DDR), RESTORE_OUT_BIT // set to input, port=0 -> n/c
+	ldi REG_TIMER, TIME_LINE_PAUSE // init timer
   
 state3: // wait for TIME_LINE_PAUSE
 	tst REG_TIMER
@@ -216,8 +251,8 @@ state4: // wait for either key released or time to reset
 	brne state4 // not yet done -> loop
 
 	// reset!
-	ldi REG_TIMER, TIME_LINE_LOW // init timer
 	sbi _SFR_IO_ADDR(DDR), RESET_BIT // set to output, port=0 -> low
+	ldi REG_TIMER, TIME_LINE_LOW // init timer
 
 	// toggle leds
 	#ifdef LED1_BIT
@@ -232,8 +267,9 @@ state5: // wait for TIME_LINE_LOW
 	brne state5 // not yet done -> loop
 	
 	// reset done
-	ldi REG_TIMER, TIME_BLINK_LED - TIME_LINE_LOW // init timer
 	cbi _SFR_IO_ADDR(DDR), RESET_BIT // set to input, port=0 -> n/c
+#if defined(LED1_BIT) || defined(LED2_BIT)
+	ldi REG_TIMER, TIME_BLINK_LED - TIME_LINE_LOW // init timer
 	
 state6: // wait for TIME_BLINK_LED (minus the already waied TIME_LINE_LOW)
 	tst REG_TIMER
@@ -246,7 +282,8 @@ state6: // wait for TIME_BLINK_LED (minus the already waied TIME_LINE_LOW)
 	#ifdef LED2_BIT
 		cbi _SFR_IO_ADDR(DDR), LED2_BIT // set to input, port=0 -> n/c
 	#endif
-  
+#endif  
+
   	// start over
 	rjmp state0
 .endfunc
@@ -260,7 +297,7 @@ state6: // wait for TIME_BLINK_LED (minus the already waied TIME_LINE_LOW)
 sig_overflow0:
 	// save SREG
 	in REG_SREG, _SFR_IO_ADDR(SREG)
-	// "entprellung" of the RESTORE KEY
+	// debounce the RESTORE KEY
 	mov REG_KEY_VALID, REG_KEY_STATE
 	in REG_KEY_STATE, _SFR_IO_ADDR(PIN)
 	andi REG_KEY_STATE, (1<<RESTORE_IN_BIT)
