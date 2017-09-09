@@ -1,6 +1,6 @@
 # Hey Emacs, this is a -*- makefile -*-
 #
-# WinAVR makefile written by Eric B. Weddington, Jörg Wunsch, et al.
+# WinAVR makefile written by Eric B. Weddington, JÃ¶rg Wunsch, et al.
 # Released to the Public Domain
 # Please read the make user manual!
 #
@@ -31,7 +31,7 @@
 # To rebuild project do "make clean" then "make all".
 #
 
-# mth 2004/09 
+# mth 2004/09
 # Differences from WinAVR 20040720 sample:
 # - DEPFLAGS according to Eric Weddingtion's fix (avrfreaks/gcc-forum)
 # - F_CPU Define in CFLAGS and AFLAGS
@@ -55,7 +55,7 @@ TARGET = restore-reset
 
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC = 
+SRC =
 
 
 # List Assembler source files here.
@@ -67,7 +67,7 @@ SRC =
 # care about how the name is spelled on its command-line.
 ASRC = restore-reset.asm
 
-# Optimization level, can be [0, 1, 2, 3, s]. 
+# Optimization level, can be [0, 1, 2, 3, s].
 # 0 = turn off optimization. s = optimize for size.
 # (Note: 3 is not always the best optimization level. See avr-libc FAQ.)
 OPT = s
@@ -80,7 +80,7 @@ OPT = s
 
 # List any extra directories to look for include files here.
 #     Each directory must be seperated by a space.
-EXTRAINCDIRS = 
+EXTRAINCDIRS =
 
 
 # Compiler flag to set the C Standard level.
@@ -135,7 +135,7 @@ ASFLAGS += -DF_CPU=$(F_CPU)
 # Floating point printf version (requires MATH_LIB = -lm below)
 #PRINTF_LIB_FLOAT = -Wl,-u,vfprintf -lprintf_flt
 
-#PRINTF_LIB = 
+#PRINTF_LIB =
 
 # Minimalistic scanf version
 #SCANF_LIB_MIN = -Wl,-u,vfscanf -lscanf_min
@@ -143,7 +143,7 @@ ASFLAGS += -DF_CPU=$(F_CPU)
 # Floating point + %[ scanf version (requires MATH_LIB = -lm below)
 #SCANF_LIB_FLOAT = -Wl,-u,vfscanf -lscanf_flt
 
-#SCANF_LIB = 
+#SCANF_LIB =
 
 #MATH_LIB = -lm
 
@@ -172,7 +172,7 @@ LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 
 # Programming support using avrdude. Settings and variables.
 
-# Programming hardware: alf avr910 avrisp bascom bsd 
+# Programming hardware: alf avr910 avrisp bascom bsd
 # dt006 pavr picoweb pony-stk200 sp12 stk200 stk500
 #
 # Type: avrdude -c ?
@@ -198,7 +198,7 @@ AVRDUDE_ERASE_COUNTER = -y
 #AVRDUDE_NO_VERIFY = -V
 
 # Increase verbosity level.  Please use this when submitting bug
-# reports about avrdude. See <http://savannah.nongnu.org/projects/avrdude> 
+# reports about avrdude. See <http://savannah.nongnu.org/projects/avrdude>
 # to submit bug reports.
 #AVRDUDE_VERBOSE = -v -v
 
@@ -207,7 +207,7 @@ AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
 AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
 AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
 
-# FUSES: 8MHz, no EEPROM erase, 
+# FUSES: 8MHz, no EEPROM erase,
 #AVRDUDE_FLAGS += -U lfuse:w:0xd4:m -U hfuse:w:0xd1:m
 
 # ---------------------------------------------------------------------------
@@ -239,7 +239,7 @@ COPY = cp
 MSG_ERRORS_NONE = Errors: none
 MSG_BEGIN = -------- begin --------
 MSG_END = --------  end  --------
-MSG_SIZE_BEFORE = Size before: 
+MSG_SIZE_BEFORE = Size before:
 MSG_SIZE_AFTER = Size after:
 MSG_COFF = Converting to AVR COFF:
 MSG_EXTENDED_COFF = Converting to AVR Extended COFF:
@@ -256,7 +256,7 @@ MSG_CLEANING = Cleaning project:
 
 
 # Define all object files.
-OBJ = $(SRC:.c=.o) $(ASRC:.asm=.o) 
+OBJ = $(SRC:.c=.o) $(ASRC:.asm=.o)
 
 # Define all listing files.
 LST = $(ASRC:.asm=.lst) $(SRC:.c=.lst)
@@ -280,7 +280,7 @@ build: elf hex eep lss sym
 elf: $(TARGET).elf
 hex: $(TARGET).hex
 eep: $(TARGET).eep
-lss: $(TARGET).lss 
+lss: $(TARGET).lss
 sym: $(TARGET).sym
 
 
@@ -311,12 +311,12 @@ sizeafter:
 
 
 # Display compiler version information.
-gccversion : 
+gccversion :
 	@$(CC) --version
 
 
 
-# Program the device.  
+# Program the device.
 program: $(TARGET).hex $(TARGET).eep
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
 
@@ -326,7 +326,7 @@ COFFCONVERT=$(OBJCOPY) --debugging \
 --change-section-address .data-0x800000 \
 --change-section-address .bss-0x800000 \
 --change-section-address .noinit-0x800000 \
---change-section-address .eeprom-0x810000 
+--change-section-address .eeprom-0x810000
 
 
 coff: $(TARGET).elf
@@ -381,7 +381,7 @@ extcoff: $(TARGET).elf
 %.o : %.c
 	@echo
 	@echo $(MSG_COMPILING) $<
-	$(CC) -c $(ALL_CFLAGS) $< -o $@ 
+	$(CC) -c $(ALL_CFLAGS) $< -o $@
 
 
 # Compile: create assembler files from C source files.
@@ -433,4 +433,3 @@ clean_list :
 .PHONY : all begin finish end sizebefore sizeafter gccversion \
 build elf hex eep lss sym coff extcoff \
 clean clean_list program
-

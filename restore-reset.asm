@@ -7,7 +7,7 @@
 
 	License: Creative Commons Attribution 3.0 Unported License
 	http://creativecommons.org/licenses/by/3.0/
-		
+
 */
 
 
@@ -130,7 +130,7 @@ main:
 	ldi REG_SREG, RAMEND & 0xff
 	out _SFR_IO_ADDR(SPL), REG_SREG
 
-	// only for initial LED states	
+	// only for initial LED states
 	#ifdef LED1_BIT
 		#define LED1_MASK (1<<LED1_BIT)
 	#else
@@ -141,9 +141,9 @@ main:
 	#else
 		#define LED2_MASK 0
 	#endif
-	
+
 	// init I/O
-	
+
 	ldi REG_SREG, LED1_MASK | LED2_MASK // the mask is 0 if the the LED is not known
 	out _SFR_IO_ADDR(DDR), REG_SREG // LEDs output, others input
 	ldi REG_SREG, (1<<RESTORE_IN_BIT)
@@ -216,11 +216,11 @@ main:
 	#endif
 	// enable interrupt
 	sei
-	
+
 	/*
 	** the real program
 	*/
- 
+
 state0: // wait for releasing the restore key
 	tst REG_KEY_VALID
 	brne state0 // not valid, try again
@@ -244,7 +244,7 @@ state2: // wait for TIME_LINE_LOW
 	// restore RESTORE_OUT for (at least) TIME_LINE_PAUSE
 	cbi _SFR_IO_ADDR(DDR), RESTORE_OUT_BIT // set to input, port=0 -> n/c
 	ldi REG_TIMER, TIME_LINE_PAUSE // init timer
-  
+
 state3: // wait for TIME_LINE_PAUSE
 	tst REG_TIMER
 	brne state3 // not yet done -> loop
@@ -273,16 +273,16 @@ state4: // wait for either key released or time to reset
 	#ifdef LED2_BIT
 		sbi _SFR_IO_ADDR(DDR), LED2_BIT // set to output, port=0 -> low
 	#endif
-  
+
 state5: // wait for TIME_LINE_LOW
 	tst REG_TIMER
 	brne state5 // not yet done -> loop
-	
+
 	// reset done
 	cbi _SFR_IO_ADDR(DDR), RESET_BIT // set to input, port=0 -> n/c
-#if defined(LED1_BIT) || defined(LED2_BIT)
+#if defined(DOUBLE_RESET) || defined(LED1_BIT) || defined(LED2_BIT)
 	ldi REG_TIMER, TIME_BLINK_LED - TIME_LINE_LOW // init timer
-	
+
 state6: // wait for TIME_BLINK_LED (minus the already waied TIME_LINE_LOW)
 	tst REG_TIMER
 	brne state6 // not yet done -> loop
@@ -294,7 +294,7 @@ state6: // wait for TIME_BLINK_LED (minus the already waied TIME_LINE_LOW)
 	#ifdef LED2_BIT
 		cbi _SFR_IO_ADDR(DDR), LED2_BIT // set to input, port=0 -> n/c
 	#endif
-#endif  
+#endif
 
   	// start over
 	rjmp state0
