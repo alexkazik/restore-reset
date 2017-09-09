@@ -53,6 +53,7 @@
 #define TIME_LINE_PAUSE (200000/TIME_BASE) // how long the restore/reset line shouln't be pulled low again
 #define TIME_RESET (2000000/TIME_BASE) // how long you should press the restore key to trigger a reset
 #define TIME_BLINK_LED (500000/TIME_BASE) // how long should the LED blink
+#define DOUBLE_RESET // do a second reset after the twice the blink time (once actually blinking)
 
 #if TIME_LINE_LOW < 1 || TIME_LINE_PAUSE < 1 || TIME_RESET < 1 || TIME_BLINK_LED < 1
 	#error "times must be > BASE"
@@ -294,6 +295,31 @@ state6: // wait for TIME_BLINK_LED (minus the already waied TIME_LINE_LOW)
 	#ifdef LED2_BIT
 		cbi _SFR_IO_ADDR(DDR), LED2_BIT // set to input, port=0 -> n/c
 	#endif
+#endif
+#if defined(DOUBLE_RESET)
+
+	ldi REG_TIMER, TIME_BLINK_LED // init timer
+
+state7: // wait for TIME_BLINK_LED or release of the restore key
+	tst REG_KEY_VALID
+	brne 1f // not valid, skip key test
+	tst REG_KEY_STATE
+	brne state1 // key released -> start over
+1:
+
+	tst REG_TIMER
+	brne state7 // not yet done -> loop
+
+	// reset again
+	sbi _SFR_IO_ADDR(DDR), RESET_BIT // set to output, port=0 -> low
+	ldi REG_TIMER, TIME_LINE_LOW // init timer
+
+state8: // wait for TIME_LINE_LOW
+	tst REG_TIMER
+	brne state8 // not yet done -> loop
+
+	// reset done
+	cbi _SFR_IO_ADDR(DDR), RESET_BIT // set to input, port=0 -> n/c
 #endif
 
   	// start over

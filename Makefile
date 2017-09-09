@@ -187,12 +187,6 @@ AVRDUDE_PORT = /dev/cu.SLAB_USBtoUART    # programmer connected to serial device
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 #AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
 
-# Uncomment the following if you want avrdude's erase cycle counter.
-# Note that this counter needs to be initialized first using -Yn,
-# see avrdude manual.
-AVRDUDE_ERASE_COUNTER = -y
-#AVRDUDE_ERASE_COUNTER = -Y0
-
 # Uncomment the following if you do /not/ wish a verification to be
 # performed after programming the device.
 #AVRDUDE_NO_VERIFY = -V
@@ -205,7 +199,6 @@ AVRDUDE_ERASE_COUNTER = -y
 AVRDUDE_FLAGS = -p $(AVRDUDE_MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
 AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
 AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
-AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
 
 # FUSES: 8MHz, no EEPROM erase,
 #AVRDUDE_FLAGS += -U lfuse:w:0xd4:m -U hfuse:w:0xd1:m

@@ -6,17 +6,11 @@ people who don't have an Reset switch in their C64 and/or don't want to
 make holes in their C64.
 
 You need an ATtiny13/A (or other), and a few resitors/capacitator only.
-So it should cost less than 2 EURO in total.
+So it should cost less than 2€ in total.
 
 It started in the [forum64][].
 
-[forum64]: http://www.forum64.de/wbb3/board2-c64-alles-rund-um-den-brotkasten/board107-sonstiges/board44-bastelecke/44323-beleuchteter-resettaster/
-
-All you need
-------------
-
-* [Code+Docs](https://github.com/alexkazik/restore-reset)
-* [Homepage](http://alex.kazik.de/232/restore-reset)
+[forum64]: https://www.forum64.de/index.php?thread/44323-beleuchteter-resettaster/
 
 How it works
 ------------
@@ -29,10 +23,13 @@ replace the regular power led of your C64 by a duo led and connect it to the cir
 (see scematics). The one led will be on only when a reset is issued (for 0.5sec),
 and the other is otherwise on.
 
+When configured a second reset is issed after double the blink time (with or without leds configured).
+This may be useful when you have some kind of hardware which expects such a behavior.
+
 Scematics
 ---------
 
-The scematics are from [Novlammoth](http://www.forum64.de/wbb3/user/4215-novlammoth/).
+The scematics are from [Novlammoth](https://www.forum64.de/index.php?user/4215-novlammoth/).
 
 You have to cut one line of the keyboard cable, the restore line, and connect both lines
 to the attiny: restore in - the line to the key, restore out - the line to the c64.
@@ -43,6 +40,8 @@ for ATtiny 13,13A,25,45,85,4,5,9,10,24,24A,44,44A,48 - just pick the one which i
 
 The use of the LEDs is optional, if you don't want/have/need them, just comment out the
 line(s) in the code. You can also disable only one of the LEDs.
+
+The double reset feature can be disabled by commenting out.
 
 You can use other PINs if you want, just change the configuration in main.asm.
 
